@@ -1,0 +1,10 @@
+@keyframes appearing {
+    from {height: 0;}
+    to {height: 121px;}
+}
+
+.new-symbol {
+    height: 121px;
+    animation-name: appearing;
+    animation-duration: 1s;
+}
