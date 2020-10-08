@@ -3,6 +3,7 @@ import {Symbol} from "../symbol";
 import {Col, Row} from "react-bootstrap";
 import {DefaultOrder, fullSpinTime} from "../../shared/config";
 import {getRandomNumber} from "../../utils/randomizer";
+import {SymbolType} from "../../shared/SymbolType";
 
 type ReelState = {
     hidden: number
@@ -16,7 +17,12 @@ type ReelState = {
 type ReelProps = {
     middleSymbol: number
     handler: any,
-    reelNumber: number
+    reelNumber: number,
+    debug: boolean,
+    debugContext?: {
+        row: number,
+        value: SymbolType
+    }
 }
 
 export class Reel extends Component<ReelProps, ReelState> {
@@ -32,15 +38,39 @@ export class Reel extends Component<ReelProps, ReelState> {
         }
     }
 
+    getDebugValue():number {
+        if (this.props.debugContext?.row === 1) {
+            return this.props.debugContext?.value + 1
+        }
+
+        if (this.props.debugContext?.row === 3) {
+            return this.props.debugContext?.value - 1
+        }
+
+        return this.props.debugContext?.value as number
+    }
 
     spin() {
-        let animationTime = getRandomNumber(1, 4) / 10
-        let amount = (fullSpinTime + (this.props.reelNumber - 1) * 500) / animationTime /1000
-        let i = 0;
+        let animationTime = 0;
+        let timesUp = false;
+        setTimeout(() => {
+            timesUp = true
+            if (!this.props.debug) {
+                this.setState({
+                    ...this.state,
+                    middle: getRandomNumber(1, 5) + 1
+                })
+            } else {
+                this.setState({
+                    ...this.state,
+                    middle: this.getDebugValue() + 1
+                })
+            }
+        }, 1000 + this.props.reelNumber*200)
+
         const loop = () => {
             setTimeout(() => {
                 const middleSymbol = this.getElementNumber(this.state.middle, -1);
-                i++;
                 this.setState({
                     ...this.state,
                     elements: this.initElements(middleSymbol, true),
@@ -50,7 +80,7 @@ export class Reel extends Component<ReelProps, ReelState> {
                     bottom: this.getElementNumber(middleSymbol, +1),
                     bottomHidden: this.getElementNumber(middleSymbol, +2)
                 });
-                if (i < amount) {
+                if (!timesUp) {
                     loop()
                 } else {
                     this.props.handler(this.props.reelNumber, this.state.top, this.state.middle, this.state.bottom)
